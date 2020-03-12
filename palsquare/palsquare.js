@@ -25,6 +25,21 @@ var Partition = function() {
 		}
 	};
 
+	this.save = function() {
+		var ret = [];
+		for(var i = 0; i < this.items.length; i+) {
+			if(typeof this.items[i] == 'object') {
+				ret.push(this.items[i].save().scheme);
+			} else {
+				ret.push(this.items[i]);
+			}
+		}
+		return {
+			orient: this.orient,
+			scheme: ret
+		};
+	}
+
 	this.fill = function(values, c) {
 		if(typeof c == 'undefined') {
 			c = 0;
@@ -241,46 +256,109 @@ var findBestScheme = function(colors) {
 	var closestColors = null;
 	var closestSchemeDist = null;
 
-	this.iterate = function(arrangement) {
-		for(var o = 0; o <= 1; o++) {
-			var scheme = new Partition();
-			scheme.load(o, arrangement);
-			var boxes = scheme.boxes(0, 0, 1, yampl);
+	this.start = function() {
+		closestScheme = null;
+		closestColors = null;
+		closestSchemeDist = null;
+	};
+
+	this.iterate = function(orient, arrangement) {
+		var scheme = new Partition();
+		scheme.load(orient, arrangement);
+		var boxes = scheme.boxes(0, 0, 1, yampl);
+		for(var i = 0; i < positions.length; i++) {
+			positions[i].box = null;
+			positions[i].dist = null;
+		}
+		var distsum = 0;
+		for(var k = 0; k < boxes.length; k++) {
+			var x = boxes[k][0] + boxes[k][2] / 2;
+			var y = boxes[k][1] + boxes[k][3] / 2;
+			/* Find closest color position */
+			var closest = null;
+			var minD = null;
 			for(var i = 0; i < positions.length; i++) {
-				positions[i].box = null;
-				positions[i].dist = null;
-			}
-			var distsum = 0;
-			for(var k = 0; k < boxes.length; k++) {
-				var x = boxes[k][0] + boxes[k][2] / 2;
-				var y = boxes[k][1] + boxes[k][3] / 2;
-				/* Find closest color position */
-				var closest = null;
-				var minD = null;
-				for(var i = 0; i < positions.length; i++) {
-					if(positions[i].box != null) {
-						continue;
-					}
-					var d = distance(positions[i], {x: x, y: y});
-					if((closest === null) || (minD > d)) {
-						minD = d;
-						closest = i;
-					}
+				if(positions[i].box != null) {
+					continue;
 				}
-				positions[closest].box = k;
-				positions[closest].dist = minD;
-				distsum += minD;
-			}
-			if((closestScheme === null) || (closestSchemeDist > distsum)) {
-				closestScheme = scheme;
-				closestSchemeDist = distsum;
-				closestColors = [];
-				for(var i = 0; i < positions.length; i++) {
-					closestColors.push(positions[i].box);
+				var d = distance(positions[i], {x: x, y: y});
+				if((closest === null) || (minD > d)) {
+					minD = d;
+					closest = i;
 				}
+			}
+			positions[closest].box = k;
+			positions[closest].dist = minD;
+			distsum += minD;
+		}
+		if((closestScheme === null) || (closestSchemeDist > distsum)) {
+			closestScheme = scheme;
+			closestSchemeDist = distsum;
+			closestColors = [];
+			for(var i = 0; i < positions.length; i++) {
+				closestColors.push(positions[i].box);
 			}
 		}
 	};
+	this.maxr = function(a) {
+		var m = 0;
+		if(typeof a == 'object') {
+			for(var i = 0; i < a.length; i++) {
+				var n = this.maxr(a[i]);
+				if(m < n) {
+					m = n;
+				}
+			}
+		} else {
+			m = a;
+		}
+		return m;
+	}
+	this.recursive = function(orient, st, stlen) {
+		if(typeof orient == 'undefined') {
+			this.iterate(0, [1, 2]);
+			this.iterate(1, [1, 2]);
+			this.recursive(closestScheme.orient, [1, 2], 2);
+		}
+		function rec(lst, i, add) {
+			var r = [];
+			for(var j = 0; j < lst.length; j++) {
+				if(typeof lst[j] == 'object') {
+					r.push(rec(lst[j], i, add));
+				} else if(lst[j] == i) {
+					var s = [];
+					for(var k = 0; k < add.length; k++) {
+						s.push(add[k]);
+					}
+					r.push(s);
+				} else {
+					r.push(lst[j]);
+				}
+			}
+			return r;
+		}
+		/* buscamos i en st y lo reemplazamos por [i, i+1] hasta [i, i+1.., colors.length] */
+		for(var i = 1; i <= stlen; i++) {
+			var add = [];
+			for(var j = i; j <= colors.length; j++) {
+				var t = [];
+				for(var k = i; k <= j; k++) {
+					t.push(k);
+				}
+				add.push(t);
+			}
+			for(var j = 0; j < add.length; j++) {
+				var r = rec(st, i, add[j]);
+				console.log(r);
+				this.iterate(orient, r);
+			}
+		}
+		var closest = closestScheme.save();
+		console.log("closest:", closest);
+		if(stlen < colors.length) {
+			this.recursive(orient, closest, stlen + 1);
+		}
+	}
 	this.finish = function() {
 		/* Fill the scheme with the colors assigned to each box */
 		var fill = [];
@@ -335,35 +413,23 @@ function compute(event) {
 			return;
 		}
 	}
-	jQuery.get('ar/' + colors.length + '.ndjson', function(data) {
-		var f = new findBestScheme(colors);
-		var l = data.indexOf("\n");
-		var xmlns = "http://www.w3.org/2000/svg";
-		while(l >= 0) {
-			if(l > 0) {
-				var dd = data.substring(0, l);
-				ar = JSON.parse(dd);
-				f.iterate(ar);
-			}
-			data = data.substring(l + 1);
-			l = data.indexOf("\n");
-		}
-		var boxes = f.finish();
-		var arena = document.getElementById('arena');
-		for(var i = arena.children.length - 1; i >= 0; i--) {
-			arena.removeChild(arena.children[i]);
-		}
-		for(var i = 0; i < boxes.length; i++) {
-			var b = boxes[i];
-			var node = document.createElementNS(xmlns, "path");
-			node.setAttributeNS(null, "d",
-				"M" + (b[0]) + "," + (b[1])
-				+ " h" + (b[2]) + " v" + (b[3])
-				+ " h-" + (b[2]) + "z");
-			node.setAttributeNS(null, "fill", chroma(b[4]).hex());
-			arena.appendChild(node);
-		}
-	});
+	var f = new findBestScheme(colors);
+	f.recursive();
+	var boxes = f.finish();
+	var arena = document.getElementById('arena');
+	for(var i = arena.children.length - 1; i >= 0; i--) {
+		arena.removeChild(arena.children[i]);
+	}
+	for(var i = 0; i < boxes.length; i++) {
+		var b = boxes[i];
+		var node = document.createElementNS(xmlns, "path");
+		node.setAttributeNS(null, "d",
+			"M" + (b[0]) + "," + (b[1])
+			+ " h" + (b[2]) + " v" + (b[3])
+			+ " h-" + (b[2]) + "z");
+		node.setAttributeNS(null, "fill", chroma(b[4]).hex());
+		arena.appendChild(node);
+	}
 	return false;
 }
 jQuery(function() {
