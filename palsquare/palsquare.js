@@ -27,7 +27,7 @@ var Partition = function() {
 
 	this.save = function() {
 		var ret = [];
-		for(var i = 0; i < this.items.length; i+) {
+		for(var i = 0; i < this.items.length; i++) {
 			if(typeof this.items[i] == 'object') {
 				ret.push(this.items[i].save().scheme);
 			} else {
