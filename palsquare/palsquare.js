@@ -209,8 +209,9 @@ var findBestScheme = function(colors) {
 	/* Compute minimum and maximum hue */
 	var hmin = null, hmax = null;
 	for(var i = 0; i < colors.length; i++) {
-		if(chrs[i].lch()[1] >= cavg / 3.0) {
-			var nh = (chrs[i].lch()[2] + 540.0 - havg) % 360.0;
+		var lch = chrs[i].lch();
+		if(!isNaN(lch[2]) && lch[1] >= cavg / 3.0) {
+			var nh = (lch[2] + 540.0 - havg) % 360.0;
 			if(hmin === null) {
 				hmin = hmax = nh;
 			} else {
@@ -239,9 +240,10 @@ var findBestScheme = function(colors) {
 	var positions = [];
 	for(var i = 0; i < colors.length; i++) {
 		var lch = chrs[i].lch()
-		if(lch[1] < cavg / 3.0) {
+		if(lch[1] < cavg / 3.0 || isNaN(lch[2])) {
 			lch[2] = havg;
 		}
+		console.log(hmin, hmax, havg, cavg, lch, ((lch[2] - hmin + 720) % 360) / ((hmax - hmin + 720) % 360));
 		positions.push({
 			x: ((lch[2] - hmin + 720) % 360) / ((hmax - hmin + 720) % 360),
 			y: (lch[0] - lmin) / (lmax - lmin) * yampl,
@@ -271,9 +273,11 @@ var findBestScheme = function(colors) {
 			positions[i].dist = null;
 		}
 		var distsum = 0;
+		var bx = [];
 		for(var k = 0; k < boxes.length; k++) {
 			var x = boxes[k][0] + boxes[k][2] / 2;
 			var y = boxes[k][1] + boxes[k][3] / 2;
+			bx.push([x, y]);
 			/* Find closest color position */
 			var closest = null;
 			var minD = null;
@@ -287,10 +291,17 @@ var findBestScheme = function(colors) {
 					closest = i;
 				}
 			}
-			positions[closest].box = k;
-			positions[closest].dist = minD;
-			distsum += minD;
+			try {
+				positions[closest].box = k;
+				positions[closest].dist = minD;
+				distsum += minD;
+			} catch(e) {
+				console.log(closest, k, boxes, positions);
+				throw e;
+			}
 		}
+		distsum /= boxes.length;
+		console.log(distsum, orient, bx, JSON.stringify(arrangement), boxes, positions);
 		if((closestScheme === null) || (closestSchemeDist > distsum)) {
 			closestScheme = scheme;
 			closestSchemeDist = distsum;
@@ -314,11 +325,18 @@ var findBestScheme = function(colors) {
 		}
 		return m;
 	}
-	this.recursive = function(orient, st, stlen) {
+	this.recursive = function(orient, st) {
 		if(typeof orient == 'undefined') {
-			this.iterate(0, [1, 2]);
-			this.iterate(1, [1, 2]);
-			this.recursive(closestScheme.orient, [1, 2], 2);
+			this.start();
+			var a = [1];
+			for(var i = 2; i <= colors.length; i++) {
+				a.push(i);
+				this.iterate(0, a);
+				this.iterate(1, a);
+			}
+			a = closestScheme.save();
+			this.recursive(a.orient, a.scheme);
+			return;
 		}
 		function rec(lst, i, add) {
 			var r = [];
@@ -337,26 +355,28 @@ var findBestScheme = function(colors) {
 			}
 			return r;
 		}
-		/* buscamos i en st y lo reemplazamos por [i, i+1] hasta [i, i+1.., colors.length] */
+		this.start();
+		var stlen = this.maxr(st);
+		/* buscamos i en st y lo reemplazamos por [i, stlen+1] hasta [i, stlen+1.., colors.length] */
 		for(var i = 1; i <= stlen; i++) {
 			var add = [];
-			for(var j = i; j <= colors.length; j++) {
-				var t = [];
-				for(var k = i; k <= j; k++) {
+			for(var j = stlen + 1; j <= colors.length; j++) {
+				var t = [i];
+				for(var k = stlen + 1; k <= j; k++) {
 					t.push(k);
 				}
 				add.push(t);
 			}
 			for(var j = 0; j < add.length; j++) {
 				var r = rec(st, i, add[j]);
-				console.log(st, i, add[j], r);
+				console.log(st, i, JSON.stringify(add[j]), JSON.stringify(r));
 				this.iterate(orient, r);
 			}
 		}
 		var closest = closestScheme.save();
-		console.log("closest:", closest);
-		if(stlen < colors.length) {
-			this.recursive(orient, closest, stlen + 1);
+		console.log("closest:", closest.orient, JSON.stringify(closest.scheme));
+		if(this.maxr(closest.scheme) < colors.length) {
+			this.recursive(orient, closest.scheme);
 		}
 	}
 	this.finish = function() {
@@ -420,6 +440,7 @@ function compute(event) {
 	for(var i = arena.children.length - 1; i >= 0; i--) {
 		arena.removeChild(arena.children[i]);
 	}
+	var xmlns = "http://www.w3.org/2000/svg";
 	for(var i = 0; i < boxes.length; i++) {
 		var b = boxes[i];
 		var node = document.createElementNS(xmlns, "path");
