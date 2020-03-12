@@ -349,7 +349,7 @@ var findBestScheme = function(colors) {
 			}
 			for(var j = 0; j < add.length; j++) {
 				var r = rec(st, i, add[j]);
-				console.log(r);
+				console.log(st, i, add[j], r);
 				this.iterate(orient, r);
 			}
 		}
