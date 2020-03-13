@@ -160,6 +160,45 @@ var Partition = function() {
 		}
 		return ret;
 	};
+	this.relative = function(x, y, w, h) {
+		if(typeof x == 'undefined') {
+			x = y = 0;
+			w = h = 1;
+		}
+		var dx, dy;
+		if(this.orient) {
+			dx = w / (this.descendants - 1);
+			dy = 0;
+		} else {
+			dx = 0;
+			dy = h / (this.descendants - 1);
+		}
+		var ret = [];
+		for(var i = 0; i < this.items.length; i++) {
+			if(typeof this.items[i] == 'object') {
+				var r = [];
+				if(this.orient) {
+					r = this.items[i].relative(x, y, dx * (this.items[i].descendants - 1), h);
+				} else {
+					r = this.items[i].relative(x, y, w, dy * (this.items[i].descendants - 1));
+				}
+				for(var j = 0; j < r.length; j++) {
+					ret.push(r[j]);
+				}
+				x += dx * this.items[i].descendants;
+				y += dy * this.items[i].descendants;
+			} else {
+				if(this.orient) {
+					ret.push([x, y + h / 2]);
+				} else {
+					ret.push([x + w / 2, y]);
+				}
+				x += dx;
+				y += dy;
+			}
+		}
+		return ret;
+	};
 };
 
 function distance(a, b) {
@@ -267,7 +306,8 @@ var findBestScheme = function(colors) {
 	this.iterate = function(orient, arrangement) {
 		var scheme = new Partition();
 		scheme.load(orient, arrangement);
-		var boxes = scheme.boxes(0, 0, 1, yampl);
+		///var boxes = scheme.boxes(0, 0, 1, yampl);
+		var boxes = scheme.relative(0, 0, 1, yampl);
 		for(var i = 0; i < positions.length; i++) {
 			positions[i].box = null;
 			positions[i].dist = null;
@@ -275,8 +315,8 @@ var findBestScheme = function(colors) {
 		var distsum = 0;
 		var bx = [];
 		for(var k = 0; k < boxes.length; k++) {
-			var x = boxes[k][0] + boxes[k][2] / 2;
-			var y = boxes[k][1] + boxes[k][3] / 2;
+			var x = boxes[k][0];
+			var y = boxes[k][1];
 			bx.push([x, y]);
 			/* Find closest color position */
 			var closest = null;
