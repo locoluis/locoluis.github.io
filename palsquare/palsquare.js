@@ -230,10 +230,34 @@ var findBestScheme = function(colors) {
 	 */
 	var asum = 0, bsum = 0, abcount = 0; lsum = 0, lmin = null, lmax = null;
 	var cavg = 0;
+
+	colors.sort(function(a, b) {
+		var aa = chroma(a).lch();
+		var bb = chroma(b).lch();
+		return aa[0] - bb[0];
+	});
+
+	var lc = null;
+	var ld = null;
+	var le = null;
+	this.isGray = true;
 	for(var i = 0; i < colors.length; i++) {
 		var ch = chroma(colors[i]);
 		chrs.push(ch);
 		cavg = ch.lch()[1];
+		if(i == 0) {
+		} else if(i == 1) {
+			ld = (ch.lch()[2] + 360.0 - lc) % 360.0;
+			ld = ld >= 180.0;
+		} else {
+			le = (ch.lch()[2] + 360.0 - lc) % 360.0;
+			le = le >= 180.0;
+			if(le != ld) {
+				this.isGray = false;
+			}
+		}
+		lc = ch.lch()[2];
+		console.log("LC=", lc, ld, le);
 	}
 	cavg /= colors.length;
 	for(var i = 0; i < colors.length; i++) {
@@ -286,7 +310,6 @@ var findBestScheme = function(colors) {
 		lmin -= 1;
 		lmax += 1;
 	}
-	this.isGray = false;
 	console.log("MIN=", hmin, "AVG=", havg, "MAX=", hmax);
 	if(Math.abs(hmax - hmin) < 15.0 || Math.abs(hmax - hmin) > 345.0) {
 		/* Caso especial */
@@ -294,16 +317,6 @@ var findBestScheme = function(colors) {
 		hmax = 359.99999;
 		hmin = 0;
 		havg = 180;
-		colors.sort(function(a, b) {
-			var aa = chroma(a).lch();
-			var bb = chroma(b).lch();
-			return aa[0] - bb[0];
-		});
-		chrs = [];
-		for(var i = 0; i < colors.length; i++) {
-			var ch = chroma(colors[i]);
-			chrs.push(ch);
-		}
 	}
 	/* Compute positions of each point, on a 1x3 rectangle
 	 * We need luma to be more important than hue
