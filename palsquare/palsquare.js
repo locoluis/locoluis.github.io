@@ -257,7 +257,7 @@ var findBestScheme = function(colors) {
 			}
 		}
 		lc = ch.lch()[2];
-		console.log("LC=", lc, ld, le);
+		console.log("LC=", chrs[i].hex(), chrs[i].lch()[0], lc, ld, le);
 	}
 	cavg /= colors.length;
 	for(var i = 0; i < colors.length; i++) {
@@ -283,11 +283,17 @@ var findBestScheme = function(colors) {
 	var lavg = lsum / colors.length
 	var havg = (Math.atan2(bsum / abcount, asum / abcount)  * 180.0 / Math.PI + 360.0) % 360.0;
 	/* Compute minimum and maximum hue */
-	var hmin = null, hmax = null;
+	var hmin = null, hmax = null, gray = true;
 	for(var i = 0; i < colors.length; i++) {
 		var lch = chrs[i].lch();
 		if(!isNaN(lch[2]) && lch[1] >= cavg / 3.0) {
-			var nh = (lch[2] + 540.0 - havg) % 360.0;
+			var nh = lch[2] - havg;
+			console.log(nh);
+			if(nh < -15.0 || nh > 15.0) {
+				gray = false;
+			}
+			nh += 540.0;
+			nh %= 360.0;
 			if(hmin === null) {
 				hmin = hmax = nh;
 			} else {
@@ -300,6 +306,9 @@ var findBestScheme = function(colors) {
 			}
 		}
 	}
+	if(gray) {
+		this.isGray = true;
+	}
 	hmin = (hmin + havg + 540.0) % 360.0;
 	hmax = (hmax + havg + 540.0) % 360.0;
 	if(Math.abs(hmax - hmin) < 0.1) {
@@ -310,10 +319,8 @@ var findBestScheme = function(colors) {
 		lmin -= 1;
 		lmax += 1;
 	}
-	console.log("MIN=", hmin, "AVG=", havg, "MAX=", hmax);
-	if(Math.abs(hmax - hmin) < 15.0 || Math.abs(hmax - hmin) > 345.0) {
-		/* Caso especial */
-		this.isGray = true;
+	console.log(this.isGray, "MIN=", hmin, "AVG=", havg, "MAX=", hmax);
+	if(this.isGray) {
 		hmax = 359.99999;
 		hmin = 0;
 		havg = 180;
