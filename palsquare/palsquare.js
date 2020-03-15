@@ -286,12 +286,40 @@ var findBestScheme = function(colors) {
 		lmin -= 1;
 		lmax += 1;
 	}
+	this.isGray = false;
+	console.log(hmin, havg, hmax);
+	if((hmax - hmin) < 15.0 || (hmax - hmin) > 345.0) {
+		/* Caso especial */
+		this.isGray = true;
+		hmax = 359.99999;
+		hmin = 0;
+		havg = 180;
+		colors.sort(function(a, b) {
+			var aa = chroma(a).lch();
+			var bb = chroma(b).lch();
+			return aa[0] - bb[0];
+		});
+		chrs = [];
+		for(var i = 0; i < colors.length; i++) {
+			var ch = chroma(colors[i]);
+			chrs.push(ch);
+		}
+	}
 	/* Compute positions of each point, on a 1x3 rectangle
 	 * We need luma to be more important than hue
 	 */
 	var positions = [];
 	for(var i = 0; i < colors.length; i++) {
-		var lch = chrs[i].lch()
+		var lch = chrs[i].lch();
+		if(this.isGray) {
+			lch = [lch[0], 0, 180.0];
+		}
+		if(chrs[i].hex() == '#000000') {
+			lch = [-25, 0, havg];
+		}
+		if(chrs[i].hex() == '#ffffff') {
+			lch = [125, 0, havg];
+		}
 		if(lch[1] < cavg / 3.0 || isNaN(lch[2])) {
 			lch[2] = havg;
 		}
@@ -302,6 +330,7 @@ var findBestScheme = function(colors) {
 			color: colors[i]
 		});
 	}
+	//console.log(positions);
 	/* Evaluate each scheme, to find the closest one. This is a
 	 * brute-force approach. I'm just a code monkey, I don't have the
 	 * brainpower necessary to think of a more elegant method.
@@ -353,6 +382,14 @@ var findBestScheme = function(colors) {
 				throw e;
 			}
 		}
+		/*
+		for(var i = 0; i < bx.length; i++) {
+			console.log(JSON.stringify(bx[i]));
+		}
+		for(var i = 0; i < positions.length; i++) {
+			console.log(JSON.stringify(positions[i]));
+		}
+		*/
 		distsum /= boxes.length;
 		//console.log(distsum, orient, bx, JSON.stringify(arrangement), boxes, positions);
 		if((closestScheme === null) || (closestSchemeDist > distsum)) {
@@ -397,6 +434,17 @@ var findBestScheme = function(colors) {
 			var a = [];
 			for(var i = 1; i <= colors.length; i++) {
 				a.push(i);
+			}
+			if(this.isGray) {
+				closestScheme = new Partition();
+				closestScheme.load(0, a);
+				closestColors = [];
+				for(var i = 0; i < colors.length; i++) {
+					closestColors.push(i);
+					positions[i].box = i;
+				}
+				console.log(closestColors);
+				return;
 			}
 			this.iterate(0, a);
 			this.iterate(1, a);
