@@ -287,8 +287,8 @@ var findBestScheme = function(colors) {
 		lmax += 1;
 	}
 	this.isGray = false;
-	console.log(hmin, havg, hmax);
-	if((hmax - hmin) < 15.0 || (hmax - hmin) > 345.0) {
+	console.log("MIN=", hmin, "AVG=", havg, "MAX=", hmax);
+	if(Math.abs(hmax - hmin) < 15.0 || Math.abs(hmax - hmin) > 345.0) {
 		/* Caso especial */
 		this.isGray = true;
 		hmax = 359.99999;
@@ -436,6 +436,7 @@ var findBestScheme = function(colors) {
 				a.push(i);
 			}
 			if(this.isGray) {
+				console.log("IS GRAY");
 				closestScheme = new Partition();
 				closestScheme.load(0, a);
 				closestColors = [];
@@ -448,6 +449,37 @@ var findBestScheme = function(colors) {
 			}
 			this.iterate(0, a);
 			this.iterate(1, a);
+			for(var cs = 0; cs <= 2; cs++) {
+				for(var ce = 0; ce <= 2; ce++) {
+					if(cs == 0 && ce == 0) {
+						continue;
+					}
+					var b = [];
+					var c = [];
+					for(var i = 0; i < cs; i++) {
+						b.push(i + 1);
+						c.push(i + 1);
+					}
+					for(; i < colors.length - 1 - ce; i += 2) {
+						b.push([i + 1, i + 2]);
+					}
+					for(; i < colors.length; i++) {
+						b.push(i + 1);
+					}
+					c.push([]);
+					for(i = c.length - 1; i < colors.length - ce; i++) {
+						c[c.length - 1].push(i + 1);
+					}
+					for(; i < colors.length; i++) {
+						c.push(i + 1);
+					}
+					this.iterate(0, b);
+					this.iterate(1, b);
+					this.iterate(0, c);
+					this.iterate(1, c);
+					console.log(cs, ce, b, c);
+				}
+			}
 			a = closestScheme.save();
 			console.log(closestSchemeDist, a.orient, JSON.stringify(a.scheme));
 			this.recursive(a.orient, a.scheme);
@@ -456,6 +488,18 @@ var findBestScheme = function(colors) {
 		if(this.depth(st) == this.maxr(st) - 1) {
 			/* [1,[2,[3,[4,5]]]] */
 			return;
+		}
+		function minlen(a) {
+			var l = a.length;
+			for(var i = 0; i < a.length; i++) {
+				if(typeof a[i] == 'object') {
+					var m = minlen(a[i]);
+					if(l > m) {
+						l = m;
+					}
+				}
+			}
+			return l;
 		}
 		function addBrackets(a, start, end) {
 			var l = JSON.stringify(a).split(/,/g);
@@ -478,6 +522,9 @@ var findBestScheme = function(colors) {
 			l[end] += "]";
 			try {
 				var ret = JSON.parse(l.join(","));
+				if(minlen(ret) < 2) {
+					return null;
+				}
 				return ret;
 			} catch(e) {
 				return null;
