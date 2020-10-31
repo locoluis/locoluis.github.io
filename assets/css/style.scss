@@ -25,6 +25,7 @@ body {
 	font-size: 16px;
 	width: 100%;
 	min-height: 100%;
+	margin: 0;
 }
 
 section {
@@ -39,6 +40,7 @@ section {
 
 section b, section table th {
 	color: $c4;
+	margin: 0 auto;
 }
 
 header {
@@ -60,5 +62,8 @@ footer {
 
 table {
 	border-collapse: collapse;
+}
+table th, table td {
 	border: solid 1px $c3;
+	text-align: center;
 }
