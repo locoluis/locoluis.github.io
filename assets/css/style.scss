@@ -1,0 +1,23 @@
+---
+---
+
+@import "";
+$c0: #0c193e;
+$c1: #1f3f9d;
+$c2: #396aff;
+$c3: #8ba8ff;
+$c4: #d8e2ff;
+
+@font-face {
+	font-family: 'DoulosSILW';
+	src: url('../fonts/DoulosSIL-R.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+body {
+	background: $c0;
+	color: $c3;
+	font-family: DoulosSILW;
+	font-size: 16px;
+}
