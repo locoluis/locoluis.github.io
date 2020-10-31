@@ -28,11 +28,13 @@ Vowels
 
 Vowel Orthography
 -----------------
+
 | Short | -i glide | -u glide | long + -ə glide |
 | - | - | - | - |
 | bit | beet | cute | beer |
 | bet | bait | | bear |
 | bat | bite | bout | bar |
-| *bought* | boy | boat | bore |
+| bought | boy | boat | bore |
 | but | | | bert |
 | bull | | boot | boor |
+

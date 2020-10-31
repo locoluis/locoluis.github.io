@@ -14,9 +14,51 @@ $c4: #d8e2ff;
 	font-style: normal;
 }
 
+* {
+	box-sizing: border-box;
+}
+
 body {
 	background: $c0;
 	color: $c3;
 	font-family: DoulosSILW;
 	font-size: 16px;
+	width: 100%;
+	min-height: 100%;
+}
+
+section {
+	width: 100%;
+	max-width: 960px;
+	height: calc(100% - 32px);
+	border-left: solid 1px $c4;
+	border-right: solid 1px $c4;
+	padding: 16px;
+	background: $c1;
+}
+
+section b, section table th {
+	color: $c4;
+}
+
+header {
+	height: 16px;
+	background: $c2;
+	color: $c0;
+}
+header nav a {
+	color: $c0;
+	text-decoration: none;
+	line-height: 16px;
+}
+
+footer {
+	height: 16px;
+	background: $c2;
+	color: $c0;
+}
+
+table {
+	border-collapse: collapse;
+	border: solid 1px $c3;
 }
