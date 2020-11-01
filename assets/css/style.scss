@@ -20,15 +20,18 @@ $c4: #d8e2ff;
 	box-sizing: border-box;
 }
 
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
 body {
 	background: $c0;
 	color: $c3;
 	font-family: "Work Sans", sans-serif;
 	font-size: 16px;
 	line-height: 24px;
-	width: 100%;
-	min-height: 100%;
-	margin: 0;
 }
 
 .ipa {
@@ -83,4 +86,7 @@ table {
 table th, table td {
 	border: solid 1px $c3;
 	text-align: center;
+}
+table tbody tr td:not(:first-child) {
+	font-family: DoulosSILW, serif;
 }
