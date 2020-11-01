@@ -41,13 +41,12 @@ body {
 section {
 	width: 100%;
 	max-width: 960px;
-	height: calc(100% - 48px);
+	min-height: 100vh;
 	border-left: solid 1px $c4;
 	border-right: solid 1px $c4;
-	padding: 16px;
+	padding: 40px 16px;
 	background: $c1;
 	margin: 0 auto;
-	overflow: auto;
 }
 section a {
 	color: $c4;
@@ -65,6 +64,10 @@ section b, section table th {
 }
 
 header {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
 	height: 24px;
 	background: $c2;
 	color: $c0;
@@ -75,6 +78,10 @@ header nav a {
 }
 
 footer {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	right: 0;
 	height: 24px;
 	background: $c2;
 	color: $c0;
