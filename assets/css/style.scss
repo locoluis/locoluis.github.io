@@ -7,6 +7,8 @@ $c2: #396aff;
 $c3: #8ba8ff;
 $c4: #d8e2ff;
 
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 @font-face {
 	font-family: 'DoulosSILW';
 	src: url('../fonts/DoulosSIL-R.woff') format('woff');
@@ -21,22 +23,38 @@ $c4: #d8e2ff;
 body {
 	background: $c0;
 	color: $c3;
-	font-family: DoulosSILW;
+	font-family: "Work Sans", sans-serif;
 	font-size: 16px;
+	line-height: 24px;
 	width: 100%;
 	min-height: 100%;
 	margin: 0;
 }
 
+.ipa {
+	font-family: DoulosSILW, serif;
+}
+
 section {
 	width: 100%;
 	max-width: 960px;
-	height: calc(100% - 32px);
+	height: calc(100% - 48px);
 	border-left: solid 1px $c4;
 	border-right: solid 1px $c4;
 	padding: 16px;
 	background: $c1;
+	margin: 0 auto;
+	overflow: auto;
 }
+section a {
+	color: $c4;
+	text-decoration: none;
+}
+section a:hover {
+	color: $c4;
+	text-decoration: underline;
+}
+
 
 section b, section table th {
 	color: $c4;
@@ -44,18 +62,17 @@ section b, section table th {
 }
 
 header {
-	height: 16px;
+	height: 24px;
 	background: $c2;
 	color: $c0;
 }
 header nav a {
 	color: $c0;
 	text-decoration: none;
-	line-height: 16px;
 }
 
 footer {
-	height: 16px;
+	height: 24px;
 	background: $c2;
 	color: $c0;
 }
